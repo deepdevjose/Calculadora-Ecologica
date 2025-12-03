@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JLabEco - Calculadora de Huella Ecológica</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- Page Title -->
+                <div class="page-header">
+                    <div class="header-icon">🍃</div>
+                    <div>
+                        <h1>JLabEco</h1>
+                        <p>Monitoreo de Huella de Carbono Tecnológica</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="export-btn" class="btn-action" title="Exportar datos a JSON">📥 Exportar</button>
+                        <button id="import-btn" class="btn-action" title="Importar datos desde JSON">📤
+                            Importar</button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span>CONSUMO ELÉCTRICO</span>
+                            <span class="icon-box yellow">⚡</span>
+                        </div>
+                        <div class="stat-value" id="stat-consumption">0.0</div>
+                        <div class="stat-unit">kWh / mes</div>
+                        <div class="stat-footer">
+                            <span class="trend">⏱️ +0.00 MWh/año</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span>HUELLA OPERATIVA</span>
+                            <span class="icon-box orange">📈</span>
+                        </div>
+                        <div class="stat-value" id="stat-co2">0.0</div>
+                        <div class="stat-unit">kg CO₂e / mes</div>
+                        <div class="stat-footer">
+                            <span class="trend">ℹ️ Uso energético mensual</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span>HUELLA DE MATERIALES</span>
+                            <span class="icon-box green">📦</span>
+                        </div>
+                        <div class="stat-value" id="stat-materials">0.0</div>
+                        <div class="stat-unit">kg CO₂e / mes</div>
+                        <div class="stat-footer">
+                            <span class="trend">ℹ️ Fabricación amortizada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="dashboard-grid">
+                    <!-- Left Column: Quick Add Form -->
+                    <div class="card form-card">
+                        <div class="card-header">
+                            <h3>+ Registro Rápido</h3>
+                        </div>
+                        <form id="quick-add-form">
+                            <div class="form-group">
+                                <label>Tipo de Dispositivo *</label>
+                                <select id="device-type">
+                                    <option value="Router">Router</option>
+                                    <option value="Laptop">Laptop</option>
+                                    <option value="Desktop">Desktop</option>
+                                    <option value="Monitor">Monitor</option>
+                                    <option value="Servidor">Servidor</option>
+                                    <option value="Impresora">Impresora</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Marca *</label>
+                                    <input type="text" id="device-brand" placeholder="Cisco, HP, Dell...">
+                                </div>
+                                <div class="form-group">
+                                    <label>Modelo *</label>
+                                    <input type="text" id="device-model" placeholder="RV340, ProCurve...">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Consumo (Watts) *</label>
+                                    <input type="number" id="device-watts" placeholder="25">
+                                </div>
+                                <div class="form-group">
+                                    <label>Horas/mes</label>
+                                    <input type="number" id="device-hours" placeholder="720">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Huella Materiales (kg CO₂e) *</label>
+                                    <input type="number" id="device-material-co2" placeholder="45.5">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vida Útil (años)</label>
+                                    <input type="number" id="device-lifespan" placeholder="5">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Ubicación</label>
+                                <input type="text" id="device-location" placeholder="Sala de Servidores, Piso 2...">
+                            </div>
+
+                            <button type="submit" class="btn-submit">+ Agregar Dispositivo</button>
+                        </form>
+                    </div>
+
+                    <!-- Right Column: Recent Acquisitions List -->
+                    <div class="card list-card">
+                        <div class="card-header">
+                            <h3>📂 Adquisiciones Recientes</h3>
+                            <span class="header-meta" id="device-count">0 dispositivos total</span>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>DISPOSITIVO</th>
+                                        <th>CONSUMO</th>
+                                        <th>HUELLA OPERATIVA</th>
+                                        <th>HUELLA MATERIALES</th>
+                                        <th>TOTAL</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="devices-table-body">
+                                    <!-- Rows generated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Summary & Charts -->
+                <div class="bottom-grid">
+                    <div class="card summary-card">
+                        <h3>Huella Total Mensual</h3>
+                        <div class="big-number" id="total-footprint">0.0 kg CO₂e</div>
+                        <div class="sub-text" id="total-yearly">≈ 0.00 toneladas CO₂e al año</div>
+                        <div class="leaf-icon">🍃</div>
+                    </div>
+
+                    <!-- Charts Container -->
+                    <div class="card charts-card">
+                        <h3>Análisis de Impacto</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div id="recommendations-panel" class="card" style="margin-top: 20px;">
+                    <h3>💡 Recomendaciones Inteligentes</h3>
+                    <div id="recommendations-list" class="rec-grid"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
