@@ -5,186 +5,1588 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JLabEco - Calculadora de Huella Ecológica</title>
+    <meta name="description" content="Monitorea y reduce tu huella de carbono tecnológica">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10b981">
 </head>
 
 <body>
     <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🍃</span>
+                    <span class="logo-text">JLabEco</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Cerrar menú">✕</button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="dashboard" aria-label="Ir a Resumen">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Resumen</span>
+                </button>
+                <button class="nav-item" data-tab="devices" aria-label="Ir a Dispositivos">
+                    <span class="nav-icon">💻</span>
+                    <span class="nav-text">Dispositivos</span>
+                </button>
+                <button class="nav-item" data-tab="charts" aria-label="Ir a Gráficas">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Gráficas</span>
+                </button>
+                <button class="nav-item" data-tab="simulator" aria-label="Ir a Simulador">
+                    <span class="nav-icon">🎯</span>
+                    <span class="nav-text">Simulador</span>
+                </button>
+                <button class="nav-item" data-tab="achievements" aria-label="Ir a Logros">
+                    <span class="nav-icon">🏆</span>
+                    <span class="nav-text">Logros</span>
+                </button>
+                <button class="nav-item" data-tab="help" aria-label="Ir a Ayuda">
+                    <span class="nav-icon">❓</span>
+                    <span class="nav-text">Ayuda</span>
+                </button>
+                <button class="nav-item" data-tab="about" aria-label="Ir a Acerca de">
+                    <span class="nav-icon">ℹ️</span>
+                    <span class="nav-text">Acerca de</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="eco-score">
+                    <span class="eco-label">Puntos Eco</span>
+                    <span class="eco-value" id="eco-points">0</span>
+                </div>
+            </div>
+        </aside>
+
         <main class="main-content">
+            <!-- Mobile Header -->
+            <header class="mobile-header">
+                <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">☰</button>
+                <div class="mobile-logo">
+                    <span>🍃</span> JLabEco
+                </div>
+                <div class="mobile-points">
+                    <span id="mobile-eco-points">0</span> pts
+                </div>
+            </header>
+
             <div class="content-wrapper">
-                <!-- Page Title -->
+                <!-- Page Header -->
                 <div class="page-header">
-                    <div class="header-icon">🍃</div>
-                    <div>
-                        <h1>JLabEco</h1>
-                        <p>Monitoreo de Huella de Carbono Tecnológica</p>
+                    <div class="header-left">
+                        <div class="header-icon">🍃</div>
+                        <div>
+                            <h1>JLabEco</h1>
+                            <p>Monitoreo de Huella de Carbono Tecnológica</p>
+                        </div>
                     </div>
                     <div class="header-actions">
-                        <button id="export-btn" class="btn-action" title="Exportar datos a JSON">📥 Exportar</button>
-                        <button id="import-btn" class="btn-action" title="Importar datos desde JSON">📤
-                            Importar</button>
+                        <div class="region-selector">
+                            <button class="btn-action region-btn" id="region-btn" title="Configurar región">
+                                <span id="region-flag">🌍</span>
+                                <span id="region-name">España</span>
+                            </button>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn-action dropdown-toggle" id="export-dropdown-btn">
+                                📥 Exportar <span class="caret">▼</span>
+                            </button>
+                            <div class="dropdown-menu" id="export-menu">
+                                <button id="export-json-btn">📄 JSON (datos)</button>
+                                <button id="export-csv-btn">📊 CSV (hoja de cálculo)</button>
+                                <button id="export-pdf-btn">📑 PDF (reporte)</button>
+                            </div>
+                        </div>
+                        <button id="import-btn" class="btn-action" title="Importar datos desde JSON">
+                            📤 Importar
+                        </button>
                         <input type="file" id="import-file" accept=".json" style="display: none;">
                     </div>
                 </div>
 
-                <!-- Stats Row -->
-                <div class="stats-row">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span>CONSUMO ELÉCTRICO</span>
-                            <span class="icon-box yellow">⚡</span>
+                <!-- ==================== TAB: DASHBOARD ==================== -->
+                <div class="tab-content active" id="tab-dashboard">
+                    <!-- KPI Stats Row -->
+                    <div class="stats-row">
+                        <div class="stat-card" data-status="neutral">
+                            <div class="stat-header">
+                                <span>CONSUMO ELÉCTRICO</span>
+                                <span class="icon-box yellow" title="Energía consumida por tus dispositivos">⚡</span>
+                            </div>
+                            <div class="stat-value" id="stat-consumption">0.0</div>
+                            <div class="stat-unit">kWh / mes</div>
+                            <div class="stat-footer">
+                                <span class="trend" id="consumption-trend">
+                                    <span class="trend-icon">📊</span>
+                                    <span class="trend-value">+0.00 MWh/año</span>
+                                </span>
+                            </div>
+                            <div class="stat-tooltip">
+                                <span class="tooltip-trigger" tabindex="0" aria-label="Más información">ℹ️</span>
+                                <div class="tooltip-content">
+                                    Kilovatios-hora consumidos mensualmente por todos tus dispositivos registrados.
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-value" id="stat-consumption">0.0</div>
-                        <div class="stat-unit">kWh / mes</div>
-                        <div class="stat-footer">
-                            <span class="trend">⏱️ +0.00 MWh/año</span>
+
+                        <div class="stat-card highlight" data-status="neutral">
+                            <div class="stat-header">
+                                <span>HUELLA OPERATIVA</span>
+                                <span class="icon-box orange" title="CO₂ por uso de energía">🏭</span>
+                            </div>
+                            <div class="stat-value" id="stat-co2">0.0</div>
+                            <div class="stat-unit">kg CO₂e / mes</div>
+                            <div class="stat-footer">
+                                <span class="trend" id="co2-trend">
+                                    <span class="trend-icon">📈</span>
+                                    <span class="trend-value">Uso energético mensual</span>
+                                </span>
+                            </div>
+                            <div class="stat-equivalence" id="co2-equivalence">
+                                🚗 Equivale a 0 km en coche
+                            </div>
+                            <div class="carbon-intensity-badge" id="carbon-intensity-badge">
+                                <span class="badge-label">Factor CO₂:</span>
+                                <span class="badge-value" id="intensity-value">0.45</span>
+                                <span class="badge-unit">kg/kWh</span>
+                            </div>
+                            <div class="stat-tooltip">
+                                <span class="tooltip-trigger" tabindex="0" aria-label="Más información">ℹ️</span>
+                                <div class="tooltip-content">
+                                    <strong>kg CO₂e</strong> = Kilogramos de CO₂ equivalente. Incluye no solo CO₂, sino también otros gases de efecto invernadero (CH₄, N₂O, etc.) convertidos a su equivalente en CO₂ según su potencial de calentamiento global. El factor varía según tu región.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" data-status="neutral">
+                            <div class="stat-header">
+                                <span>HUELLA DE MATERIALES</span>
+                                <span class="icon-box green" title="CO₂ por fabricación">📦</span>
+                            </div>
+                            <div class="stat-value" id="stat-materials">0.0</div>
+                            <div class="stat-unit">kg CO₂e / mes</div>
+                            <div class="stat-footer">
+                                <span class="trend" id="materials-trend">
+                                    <span class="trend-icon">♻️</span>
+                                    <span class="trend-value">Fabricación amortizada</span>
+                                </span>
+                            </div>
+                            <div class="stat-tooltip">
+                                <span class="tooltip-trigger" tabindex="0" aria-label="Más información">ℹ️</span>
+                                <div class="tooltip-content">
+                                    Huella de carbono de fabricación distribuida mensualmente según la vida útil estimada.
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span>HUELLA OPERATIVA</span>
-                            <span class="icon-box orange">📈</span>
+                    <!-- Progress Goal Section -->
+                    <div class="goal-section">
+                        <div class="goal-header">
+                            <h3>🎯 Tu Meta de Reducción</h3>
+                            <button class="btn-small" id="set-goal-btn">Configurar</button>
                         </div>
-                        <div class="stat-value" id="stat-co2">0.0</div>
-                        <div class="stat-unit">kg CO₂e / mes</div>
-                        <div class="stat-footer">
-                            <span class="trend">ℹ️ Uso energético mensual</span>
+                        <div class="goal-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="goal-progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <span id="goal-current">0 kg CO₂e</span>
+                                <span id="goal-target">Meta: -- kg CO₂e</span>
+                            </div>
+                        </div>
+                        <p class="goal-message" id="goal-message">Configura una meta para ver tu progreso</p>
+                    </div>
+
+                    <!-- Quick Summary Grid -->
+                    <div class="summary-grid">
+                        <div class="card summary-card">
+                            <h3>🌍 Huella Total Mensual</h3>
+                            <div class="big-number" id="total-footprint">0.0 kg CO₂e</div>
+                            <div class="sub-text" id="total-yearly">≈ 0.00 toneladas CO₂e al año</div>
+                            <div class="equivalences">
+                                <div class="equiv-item" id="equiv-trees">
+                                    🌳 <span>0</span> árboles necesarios para absorberlo
+                                </div>
+                                <div class="equiv-item" id="equiv-flights">
+                                    ✈️ <span>0%</span> de un vuelo Madrid-Barcelona
+                                </div>
+                            </div>
+                            <div class="leaf-icon">🍃</div>
+                        </div>
+
+                        <div class="card mini-chart-card">
+                            <h3>📊 Distribución de Huella</h3>
+                            <div class="chart-wrapper-small">
+                                <canvas id="donutChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="donut-legend"></div>
                         </div>
                     </div>
 
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span>HUELLA DE MATERIALES</span>
-                            <span class="icon-box green">📦</span>
-                        </div>
-                        <div class="stat-value" id="stat-materials">0.0</div>
-                        <div class="stat-unit">kg CO₂e / mes</div>
-                        <div class="stat-footer">
-                            <span class="trend">ℹ️ Fabricación amortizada</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Grid -->
-                <div class="dashboard-grid">
-                    <!-- Left Column: Quick Add Form -->
-                    <div class="card form-card">
+                    <!-- Recommendations -->
+                    <div id="recommendations-panel" class="card recommendations-card">
                         <div class="card-header">
-                            <h3>+ Registro Rápido</h3>
+                            <h3>💡 Recomendaciones Inteligentes</h3>
+                            <span class="badge" id="rec-count">0</span>
                         </div>
-                        <form id="quick-add-form">
-                            <div class="form-group">
-                                <label>Tipo de Dispositivo *</label>
-                                <select id="device-type">
-                                    <option value="Router">Router</option>
-                                    <option value="Laptop">Laptop</option>
-                                    <option value="Desktop">Desktop</option>
-                                    <option value="Monitor">Monitor</option>
-                                    <option value="Servidor">Servidor</option>
-                                    <option value="Impresora">Impresora</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Marca *</label>
-                                    <input type="text" id="device-brand" placeholder="Cisco, HP, Dell...">
-                                </div>
-                                <div class="form-group">
-                                    <label>Modelo *</label>
-                                    <input type="text" id="device-model" placeholder="RV340, ProCurve...">
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Consumo (Watts) *</label>
-                                    <input type="number" id="device-watts" placeholder="25">
-                                </div>
-                                <div class="form-group">
-                                    <label>Horas/mes</label>
-                                    <input type="number" id="device-hours" placeholder="720">
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Huella Materiales (kg CO₂e) *</label>
-                                    <input type="number" id="device-material-co2" placeholder="45.5">
-                                </div>
-                                <div class="form-group">
-                                    <label>Vida Útil (años)</label>
-                                    <input type="number" id="device-lifespan" placeholder="5">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Ubicación</label>
-                                <input type="text" id="device-location" placeholder="Sala de Servidores, Piso 2...">
-                            </div>
-
-                            <button type="submit" class="btn-submit">+ Agregar Dispositivo</button>
-                        </form>
+                        <div id="recommendations-list" class="rec-grid"></div>
                     </div>
+                </div>
 
-                    <!-- Right Column: Recent Acquisitions List -->
-                    <div class="card list-card">
-                        <div class="card-header">
-                            <h3>📂 Adquisiciones Recientes</h3>
-                            <span class="header-meta" id="device-count">0 dispositivos total</span>
+                <!-- ==================== TAB: DEVICES ==================== -->
+                <div class="tab-content" id="tab-devices">
+                    <div class="dashboard-grid">
+                        <!-- Left Column: Quick Add Form -->
+                        <div class="card form-card">
+                            <div class="card-header">
+                                <h3>➕ Registro Rápido</h3>
+                            </div>
+                            <form id="quick-add-form" novalidate>
+                                <div class="form-group">
+                                    <label for="device-type">
+                                        Tipo de Dispositivo *
+                                        <span class="label-hint">Categoría del equipo</span>
+                                    </label>
+                                    <select id="device-type" required>
+                                        <option value="">Selecciona un tipo...</option>
+                                        <optgroup label="💻 Computación">
+                                            <option value="Laptop">💻 Laptop</option>
+                                            <option value="Desktop">🖥️ Desktop / PC Escritorio</option>
+                                            <option value="All-in-One">🖥️ All-in-One</option>
+                                            <option value="Mac">🍎 Mac / MacBook</option>
+                                            <option value="Servidor">💾 Servidor</option>
+                                            <option value="Thin Client">📟 Thin Client</option>
+                                        </optgroup>
+                                        <optgroup label="📱 Movilidad">
+                                            <option value="Smartphone">📱 Smartphone</option>
+                                            <option value="Celular Básico">🧱 Celular Básico</option>
+                                            <option value="Tablet">📲 Tablet / iPad</option>
+                                            <option value="E-Reader">📖 E-Reader (Kindle)</option>
+                                            <option value="Smartwatch">⌚ Smartwatch</option>
+                                        </optgroup>
+                                        <optgroup label="📺 Video y Entretenimiento">
+                                            <option value="Smart TV">📺 Smart TV</option>
+                                            <option value="Proyector">📽️ Proyector</option>
+                                            <option value="Pantalla de Proyección">🎞️ Pantalla de Proyección</option>
+                                            <option value="Decodificador">📡 Decodificador / TV Box</option>
+                                            <option value="Reproductor Blu-ray">💿 Reproductor Blu-ray/DVD</option>
+                                            <option value="Cámara Digital">📸 Cámara Digital</option>
+                                            <option value="Cámara de Video">📹 Cámara de Video</option>
+                                            <option value="Drone">🚁 Drone</option>
+                                        </optgroup>
+                                        <optgroup label="🔊 Audio">
+                                            <option value="Bocina Bluetooth">🔊 Bocina Bluetooth</option>
+                                            <option value="Barra de Sonido">🔈 Barra de Sonido</option>
+                                            <option value="Home Theater">🏠 Home Theater</option>
+                                            <option value="Audífonos Diadema">🎧 Audífonos (Diadema)</option>
+                                            <option value="Audífonos In-Ear">👂 Audífonos (In-Ear)</option>
+                                            <option value="Micrófono">🎙️ Micrófono</option>
+                                            <option value="Radio">📻 Radio / Estéreo</option>
+                                            <option value="Amplificador">🎛️ Amplificador</option>
+                                        </optgroup>
+                                        <optgroup label="🎮 Gaming">
+                                            <option value="Consola">🎮 Consola (Xbox/PlayStation)</option>
+                                            <option value="Consola Portátil">👾 Consola Portátil (Switch/SteamDeck)</option>
+                                            <option value="Control">🕹️ Control / Mando / Joystick</option>
+                                            <option value="Volante">🏎️ Volante / Simulador</option>
+                                            <option value="Visor VR">👓 Visor VR (Realidad Virtual)</option>
+                                        </optgroup>
+                                        <optgroup label="🖨️ Oficina y Punto de Venta">
+                                            <option value="Impresora Inyección">🖨️ Impresora Inyección</option>
+                                            <option value="Impresora Láser">🖨️ Impresora Láser</option>
+                                            <option value="Multifuncional">📠 Multifuncional</option>
+                                            <option value="Escáner">📄 Escáner</option>
+                                            <option value="Impresora de Tickets">🧾 Impresora de Tickets</option>
+                                            <option value="Lector de Código de Barras">🔫 Lector de Código de Barras</option>
+                                            <option value="Trituradora de Papel">✂️ Trituradora de Papel</option>
+                                        </optgroup>
+                                        <optgroup label="📡 Redes y Conectividad">
+                                            <option value="Router">📶 Router / Módem</option>
+                                            <option value="Switch">🔁 Switch</option>
+                                            <option value="Access Point">📡 Access Point</option>
+                                            <option value="Antena">🌐 Antena</option>
+                                        </optgroup>
+                                        <optgroup label="⚡ Energía y Protección">
+                                            <option value="No-Break">🔋 No-Break (UPS)</option>
+                                            <option value="Regulador">⚡ Regulador de Voltaje</option>
+                                            <option value="Fuente de Poder">🔌 Fuente de Poder</option>
+                                            <option value="Powerbank">🔋 Banco de Baterías (Powerbank)</option>
+                                            <option value="Inversor Solar">☀️ Inversor Solar</option>
+                                        </optgroup>
+                                        <optgroup label="🏠 Electrodomésticos (Línea Blanca)">
+                                            <option value="Refrigerador">❄️ Refrigerador</option>
+                                            <option value="Frigobar">🧊 Frigobar</option>
+                                            <option value="Lavadora">🧼 Lavadora</option>
+                                            <option value="Secadora">🌀 Secadora</option>
+                                            <option value="Lavavajillas">🍽️ Lavavajillas</option>
+                                            <option value="Estufa">🔥 Estufa / Horno</option>
+                                            <option value="Microondas">♨️ Microondas</option>
+                                        </optgroup>
+                                        <optgroup label="🍳 Cocina (Pequeños)">
+                                            <option value="Licuadora">🥤 Licuadora</option>
+                                            <option value="Cafetera">☕ Cafetera</option>
+                                            <option value="Freidora de Aire">🍟 Freidora de Aire</option>
+                                            <option value="Tostadora">🍞 Tostadora</option>
+                                            <option value="Sandwichera">🥪 Sandwichera</option>
+                                            <option value="Batidora">🥣 Batidora</option>
+                                            <option value="Procesador de Alimentos">🥩 Procesador de Alimentos</option>
+                                        </optgroup>
+                                        <optgroup label="🧹 Hogar y Clima">
+                                            <option value="Ventilador">💨 Ventilador</option>
+                                            <option value="Aire Acondicionado">❄️ Aire Acondicionado (Minisplit)</option>
+                                            <option value="Calefactor">🌡️ Calefactor</option>
+                                            <option value="Aspiradora">🧹 Aspiradora</option>
+                                            <option value="Robot Aspiradora">🤖 Robot Aspiradora</option>
+                                            <option value="Plancha">👕 Plancha</option>
+                                        </optgroup>
+                                        <optgroup label="🛠️ Herramientas">
+                                            <option value="Taladro">🔩 Taladro</option>
+                                            <option value="Esmeriladora">⚙️ Esmeriladora</option>
+                                            <option value="Lámpara de Trabajo">🔦 Lámpara de Trabajo</option>
+                                            <option value="Medidor Láser">📏 Medidor Láser</option>
+                                        </optgroup>
+                                        <optgroup label="Otros">
+                                            <option value="Otro">📦 Otros</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="device-brand">Marca *</label>
+                                        <input type="text" id="device-brand" placeholder="Cisco, HP, Dell..." 
+                                               list="brand-suggestions" required autocomplete="off">
+                                        <datalist id="brand-suggestions">
+                                            <option value="Dell">
+                                            <option value="HP">
+                                            <option value="Lenovo">
+                                            <option value="Cisco">
+                                            <option value="Apple">
+                                            <option value="Samsung">
+                                            <option value="ASUS">
+                                            <option value="Acer">
+                                        </datalist>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="device-model">Modelo *</label>
+                                        <input type="text" id="device-model" placeholder="RV340, ProCurve..." required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="device-watts">
+                                            Consumo (Watts) *
+                                            <span class="tooltip-icon" data-tooltip="Potencia en vatios que consume el dispositivo. Ejemplo: Router = 20-40W, Laptop = 45-65W, PC = 300-500W. Revisa la etiqueta o especificaciones." tabindex="0">
+                                                ℹ️
+                                            </span>
+                                        </label>
+                                        <input type="number" id="device-watts" placeholder="25" min="1" max="5000" required>
+                                        <span class="input-hint" id="watts-hint"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="device-hours">
+                                            Horas/mes
+                                            <span class="tooltip-icon" data-tooltip="Horas que el dispositivo está encendido al mes. 24/7 = 720h, Oficina 8h/día = 240h" tabindex="0">
+                                                ℹ️
+                                            </span>
+                                        </label>
+                                        <input type="number" id="device-hours" placeholder="720" value="720" min="1" max="744">
+                                        <span class="input-hint">Predeterminado: 24h × 30 días</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="device-material-co2">
+                                            Huella Materiales (kg CO₂e)
+                                            <span class="tooltip-icon" data-tooltip="CO₂ equivalente emitido en la fabricación del dispositivo. Ejemplo: Smartphone = 70kg, Laptop = 270kg, Servidor = 500kg. El sistema sugiere valores típicos." tabindex="0">
+                                                ℹ️
+                                            </span>
+                                        </label>
+                                        <input type="number" id="device-material-co2" placeholder="45.5" min="0" step="0.1">
+                                        <span class="input-hint" id="material-hint">Valor típico según tipo</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="device-lifespan">
+                                            Vida Útil (años)
+                                            <span class="tooltip-icon" data-tooltip="Años esperados de uso del dispositivo. Promedio: Smartphone = 2-3 años, Laptop = 4-5 años, Servidor = 5-7 años" tabindex="0">
+                                                ℹ️
+                                            </span>
+                                        </label>
+                                        <input type="number" id="device-lifespan" placeholder="5" value="5" min="1" max="20">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="device-location">Ubicación (opcional)</label>
+                                    <input type="text" id="device-location" placeholder="Sala de Servidores, Piso 2...">
+                                </div>
+
+                                <button type="submit" class="btn-submit">
+                                    <span class="btn-icon">➕</span> Agregar Dispositivo
+                                </button>
+                            </form>
                         </div>
 
-                        <div class="table-container">
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>DISPOSITIVO</th>
-                                        <th>CONSUMO</th>
-                                        <th>HUELLA OPERATIVA</th>
-                                        <th>HUELLA MATERIALES</th>
-                                        <th>TOTAL</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="devices-table-body">
-                                    <!-- Rows generated by JS -->
-                                </tbody>
-                            </table>
+                        <!-- Right Column: Devices List -->
+                        <div class="card list-card">
+                            <div class="card-header">
+                                <h3>📂 Dispositivos Registrados</h3>
+                                <span class="header-meta" id="device-count">0 dispositivos</span>
+                            </div>
+
+                            <!-- Filters -->
+                            <div class="filters-bar">
+                                <div class="filter-group">
+                                    <label for="filter-type">Filtrar por tipo:</label>
+                                    <select id="filter-type">
+                                        <option value="all">Todos</option>
+                                        <optgroup label="💻 Computación">
+                                            <option value="Laptop">💻 Laptop</option>
+                                            <option value="Desktop">🖥️ Desktop</option>
+                                            <option value="All-in-One">🖥️ All-in-One</option>
+                                            <option value="Mac">🍎 Mac</option>
+                                            <option value="Servidor">💾 Servidor</option>
+                                            <option value="Thin Client">📟 Thin Client</option>
+                                        </optgroup>
+                                        <optgroup label="📱 Movilidad">
+                                            <option value="Smartphone">📱 Smartphone</option>
+                                            <option value="Celular Básico">🧱 Celular Básico</option>
+                                            <option value="Tablet">📲 Tablet</option>
+                                            <option value="E-Reader">📖 E-Reader</option>
+                                            <option value="Smartwatch">⌚ Smartwatch</option>
+                                        </optgroup>
+                                        <optgroup label="📺 Video y Entretenimiento">
+                                            <option value="Smart TV">📺 Smart TV</option>
+                                            <option value="Proyector">📽️ Proyector</option>
+                                            <option value="Pantalla de Proyección">🎞️ Pantalla de Proyección</option>
+                                            <option value="Decodificador">📡 Decodificador</option>
+                                            <option value="Reproductor Blu-ray">💿 Reproductor Blu-ray</option>
+                                            <option value="Cámara Digital">📸 Cámara Digital</option>
+                                            <option value="Cámara de Video">📹 Cámara de Video</option>
+                                            <option value="Drone">🚁 Drone</option>
+                                        </optgroup>
+                                        <optgroup label="🔊 Audio">
+                                            <option value="Bocina Bluetooth">🔊 Bocina Bluetooth</option>
+                                            <option value="Barra de Sonido">🔈 Barra de Sonido</option>
+                                            <option value="Home Theater">🏠 Home Theater</option>
+                                            <option value="Audífonos Diadema">🎧 Audífonos Diadema</option>
+                                            <option value="Audífonos In-Ear">👂 Audífonos In-Ear</option>
+                                            <option value="Micrófono">🎙️ Micrófono</option>
+                                            <option value="Radio">📻 Radio</option>
+                                            <option value="Amplificador">🎛️ Amplificador</option>
+                                        </optgroup>
+                                        <optgroup label="🎮 Gaming">
+                                            <option value="Consola">🎮 Consola</option>
+                                            <option value="Consola Portátil">👾 Consola Portátil</option>
+                                            <option value="Control">🕹️ Control</option>
+                                            <option value="Volante">🏎️ Volante</option>
+                                            <option value="Visor VR">👓 Visor VR</option>
+                                        </optgroup>
+                                        <optgroup label="🖨️ Oficina y POS">
+                                            <option value="Impresora Inyección">🖨️ Impresora Inyección</option>
+                                            <option value="Impresora Láser">🖨️ Impresora Láser</option>
+                                            <option value="Multifuncional">📠 Multifuncional</option>
+                                            <option value="Escáner">📄 Escáner</option>
+                                            <option value="Impresora de Tickets">🧾 Impresora Tickets</option>
+                                            <option value="Lector de Código de Barras">🔫 Lector Barras</option>
+                                            <option value="Trituradora de Papel">✂️ Trituradora</option>
+                                        </optgroup>
+                                        <optgroup label="📡 Redes">
+                                            <option value="Router">📶 Router</option>
+                                            <option value="Switch">🔁 Switch</option>
+                                            <option value="Access Point">📡 Access Point</option>
+                                            <option value="Antena">🌐 Antena</option>
+                                        </optgroup>
+                                        <optgroup label="⚡ Energía">
+                                            <option value="No-Break">🔋 No-Break</option>
+                                            <option value="Regulador">⚡ Regulador</option>
+                                            <option value="Fuente de Poder">🔌 Fuente de Poder</option>
+                                            <option value="Powerbank">🔋 Powerbank</option>
+                                            <option value="Inversor Solar">☀️ Inversor Solar</option>
+                                        </optgroup>
+                                        <optgroup label="🏠 Línea Blanca">
+                                            <option value="Refrigerador">❄️ Refrigerador</option>
+                                            <option value="Frigobar">🧊 Frigobar</option>
+                                            <option value="Lavadora">🧼 Lavadora</option>
+                                            <option value="Secadora">🌀 Secadora</option>
+                                            <option value="Lavavajillas">🍽️ Lavavajillas</option>
+                                            <option value="Estufa">🔥 Estufa</option>
+                                            <option value="Microondas">♨️ Microondas</option>
+                                        </optgroup>
+                                        <optgroup label="🍳 Cocina">
+                                            <option value="Licuadora">🥤 Licuadora</option>
+                                            <option value="Cafetera">☕ Cafetera</option>
+                                            <option value="Freidora de Aire">🍟 Freidora de Aire</option>
+                                            <option value="Tostadora">🍞 Tostadora</option>
+                                            <option value="Sandwichera">🥪 Sandwichera</option>
+                                            <option value="Batidora">🥣 Batidora</option>
+                                            <option value="Procesador de Alimentos">🥩 Procesador</option>
+                                        </optgroup>
+                                        <optgroup label="🧹 Hogar">
+                                            <option value="Ventilador">💨 Ventilador</option>
+                                            <option value="Aire Acondicionado">❄️ Aire Acondicionado</option>
+                                            <option value="Calefactor">🌡️ Calefactor</option>
+                                            <option value="Aspiradora">🧹 Aspiradora</option>
+                                            <option value="Robot Aspiradora">🤖 Robot Aspiradora</option>
+                                            <option value="Plancha">👕 Plancha</option>
+                                        </optgroup>
+                                        <optgroup label="🛠️ Herramientas">
+                                            <option value="Taladro">🔩 Taladro</option>
+                                            <option value="Esmeriladora">⚙️ Esmeriladora</option>
+                                            <option value="Lámpara de Trabajo">🔦 Lámpara Trabajo</option>
+                                            <option value="Medidor Láser">📏 Medidor Láser</option>
+                                        </optgroup>
+                                        <optgroup label="Otros">
+                                            <option value="Otro">📦 Otros</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label for="sort-by">Ordenar por:</label>
+                                    <select id="sort-by">
+                                        <option value="recent">Más recientes</option>
+                                        <option value="consumption-high">Mayor consumo</option>
+                                        <option value="consumption-low">Menor consumo</option>
+                                        <option value="footprint-high">Mayor huella</option>
+                                        <option value="name">Nombre A-Z</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="custom-table" role="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">DISPOSITIVO</th>
+                                            <th scope="col">CONSUMO</th>
+                                            <th scope="col">HUELLA OPERATIVA</th>
+                                            <th scope="col">HUELLA MATERIALES</th>
+                                            <th scope="col">TOTAL</th>
+                                            <th scope="col"><span class="sr-only">Acciones</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="devices-table-body">
+                                        <!-- Rows generated by JS -->
+                                    </tbody>
+                                </table>
+                                <div class="empty-state" id="empty-devices" style="display: none;">
+                                    <span class="empty-icon">📭</span>
+                                    <p>No hay dispositivos registrados</p>
+                                    <span class="empty-hint">Agrega tu primer dispositivo usando el formulario</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Bottom Summary & Charts -->
-                <div class="bottom-grid">
-                    <div class="card summary-card">
-                        <h3>Huella Total Mensual</h3>
-                        <div class="big-number" id="total-footprint">0.0 kg CO₂e</div>
-                        <div class="sub-text" id="total-yearly">≈ 0.00 toneladas CO₂e al año</div>
-                        <div class="leaf-icon">🍃</div>
+                <!-- ==================== TAB: CHARTS ==================== -->
+                <div class="tab-content" id="tab-charts">
+                    <!-- Chart Filters -->
+                    <div class="chart-filters-panel">
+                        <div class="filter-item">
+                            <label>📅 Período:</label>
+                            <select id="chart-period-filter">
+                                <option value="all">Todo el tiempo</option>
+                                <option value="7">Últimos 7 días</option>
+                                <option value="30" selected>Último mes</option>
+                                <option value="90">Últimos 3 meses</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>📂 Categoría:</label>
+                            <select id="chart-category-filter">
+                                <option value="all">Todas</option>
+                                <option value="Computación">💻 Computación</option>
+                                <option value="Movilidad">📱 Movilidad</option>
+                                <option value="Redes">📡 Redes</option>
+                                <option value="Audio">🔊 Audio</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>📊 Modo:</label>
+                            <select id="chart-value-mode">
+                                <option value="absolute">Valores absolutos</option>
+                                <option value="percentage">Porcentajes</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary btn-sm" id="apply-chart-filters">
+                            ✓ Aplicar filtros
+                        </button>
                     </div>
 
-                    <!-- Charts Container -->
-                    <div class="card charts-card">
-                        <h3>Análisis de Impacto</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="mainChart"></canvas>
+                    <div class="charts-grid">
+                        <!-- Main Comparison Chart -->
+                        <div class="card chart-card-large">
+                            <div class="card-header">
+                                <h3>📊 Comparativa de Huella por Tipo</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" data-chart-type="bar">Barras</button>
+                                    <button class="chart-btn" data-chart-type="horizontal">Horizontal</button>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="mainChart"></canvas>
+                            </div>
+                            <div class="chart-legend-info" id="main-chart-info"></div>
+                        </div>
+
+                        <!-- Time Series Chart -->
+                        <div class="card chart-card-large">
+                            <div class="card-header">
+                                <h3>📈 Tendencia Histórica</h3>
+                                <div class="chart-controls">
+                                    <select id="history-range">
+                                        <option value="7">Últimos 7 días</option>
+                                        <option value="30" selected>Último mes</option>
+                                        <option value="90">Últimos 3 meses</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="historyChart"></canvas>
+                            </div>
+                            <p class="chart-note">📝 El historial se registra automáticamente cada vez que agregas o modificas dispositivos.</p>
+                        </div>
+
+                        <!-- Device Breakdown -->
+                        <div class="card chart-card-medium">
+                            <div class="card-header">
+                                <h3>🥧 Distribución por Dispositivo</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="devicePieChart"></canvas>
+                            </div>
+                            <div class="chart-summary" id="pie-chart-summary"></div>
+                        </div>
+
+                        <!-- Category Comparison -->
+                        <div class="card chart-card-medium">
+                            <div class="card-header">
+                                <h3>📉 Emisiones: Operativas vs Materiales</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="stackedChart"></canvas>
+                            </div>
+                            <div class="chart-summary" id="stacked-chart-summary"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recommendations -->
-                <div id="recommendations-panel" class="card" style="margin-top: 20px;">
-                    <h3>💡 Recomendaciones Inteligentes</h3>
-                    <div id="recommendations-list" class="rec-grid"></div>
+                <!-- ==================== TAB: SIMULATOR ==================== -->
+                <div class="tab-content" id="tab-simulator">
+                    <div class="simulator-container">
+                        <div class="card simulator-card">
+                            <div class="card-header">
+                                <h3>🎯 Simulador de Ahorro Energético</h3>
+                                <p class="card-subtitle">Descubre cuánto puedes reducir tu huella de carbono</p>
+                            </div>
+
+                            <div class="simulator-content">
+                                <div class="sim-scenario">
+                                    <h4>📉 Escenario: Reducir horas de uso</h4>
+                                    <div class="sim-control">
+                                        <label for="sim-hours-reduction">Reducción de horas diarias:</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="sim-hours-reduction" min="0" max="8" value="1" step="0.5">
+                                            <span class="slider-value" id="sim-hours-value">1 hora menos/día</span>
+                                        </div>
+                                    </div>
+                                    <div class="sim-result">
+                                        <div class="sim-result-item">
+                                            <span class="sim-label">Ahorro mensual:</span>
+                                            <span class="sim-value positive" id="sim-kwh-saved">0 kWh</span>
+                                        </div>
+                                        <div class="sim-result-item">
+                                            <span class="sim-label">CO₂ evitado:</span>
+                                            <span class="sim-value positive" id="sim-co2-saved">0 kg CO₂e</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="sim-scenario">
+                                    <h4>🔄 Escenario: Renovar equipos por eficientes</h4>
+                                    <div class="sim-control">
+                                        <label for="sim-efficiency">Mejora de eficiencia energética:</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="sim-efficiency" min="0" max="50" value="20" step="5">
+                                            <span class="slider-value" id="sim-efficiency-value">20% más eficiente</span>
+                                        </div>
+                                    </div>
+                                    <div class="sim-result">
+                                        <div class="sim-result-item">
+                                            <span class="sim-label">Nuevo consumo mensual:</span>
+                                            <span class="sim-value" id="sim-new-consumption">0 kWh</span>
+                                        </div>
+                                        <div class="sim-result-item">
+                                            <span class="sim-label">Reducción de huella:</span>
+                                            <span class="sim-value positive" id="sim-footprint-reduction">0 kg CO₂e</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="sim-scenario">
+                                    <h4>⏰ Escenario: Apagado automático nocturno</h4>
+                                    <p class="sim-description">Simula apagar equipos no esenciales de 22:00 a 07:00 (9 horas)</p>
+                                    <div class="sim-control">
+                                        <label for="sim-devices-off">Porcentaje de equipos afectados:</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="sim-devices-off" min="0" max="100" value="50" step="10">
+                                            <span class="slider-value" id="sim-devices-off-value">50% de equipos</span>
+                                        </div>
+                                    </div>
+                                    <div class="sim-result">
+                                        <div class="sim-result-item">
+                                            <span class="sim-label">Ahorro anual:</span>
+                                            <span class="sim-value positive" id="sim-yearly-saved">0 kg CO₂e</span>
+                                        </div>
+                                        <div class="sim-result-item">
+                                            <span class="sim-label">Equivalente a:</span>
+                                            <span class="sim-value" id="sim-equivalent">🌳 0 árboles plantados</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sim-summary">
+                                <h4>📊 Resumen del Impacto Potencial</h4>
+                                <div class="sim-total">
+                                    <div class="sim-total-item">
+                                        <span class="sim-total-label">Ahorro total anual estimado:</span>
+                                        <span class="sim-total-value" id="sim-total-savings">0 kg CO₂e</span>
+                                    </div>
+                                    <div class="sim-total-item">
+                                        <span class="sim-total-label">Reducción porcentual:</span>
+                                        <span class="sim-total-value" id="sim-total-percent">0%</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Gráfica de ahorro acumulado -->
+                                <div class="sim-chart-wrapper">
+                                    <h5>📈 Proyección de Ahorro Acumulado</h5>
+                                    <canvas id="savingsProjectionChart"></canvas>
+                                </div>
+                                
+                                <!-- Botón aplicar simulación -->
+                                <div class="sim-actions">
+                                    <button class="btn-primary btn-lg" id="apply-simulation-btn">
+                                        🎯 Aplicar como Meta Personal
+                                    </button>
+                                    <p class="sim-action-hint">Convierte esta simulación en tu objetivo mensual de reducción</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: ACHIEVEMENTS ==================== -->
+                <div class="tab-content" id="tab-achievements">
+                    <div class="achievements-container">
+                        <div class="achievements-header">
+                            <div class="level-display">
+                                <span class="level-badge" id="user-level">🌱</span>
+                                <div class="level-info">
+                                    <span class="level-title" id="level-title">Eco Novato</span>
+                                    <span class="level-points"><span id="total-eco-points">0</span> puntos ecológicos</span>
+                                </div>
+                            </div>
+                            <div class="level-progress">
+                                <div class="level-bar">
+                                    <div class="level-fill" id="level-fill" style="width: 0%"></div>
+                                </div>
+                                <span class="level-next" id="level-next">Siguiente nivel: 100 pts</span>
+                            </div>
+                        </div>
+
+                        <div class="achievements-grid" id="achievements-grid">
+                            <!-- Generated by JS -->
+                        </div>
+
+                        <div class="challenges-section">
+                            <h3>🎯 Retos Activos</h3>
+                            <div class="challenges-grid" id="challenges-grid">
+                                <!-- Generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Tab -->
+                <div class="tab-content" id="tab-help">
+                    <div class="help-container">
+                        <!-- Navegación lateral fija -->
+                        <aside class="help-nav">
+                            <h3>📚 Contenido</h3>
+                            <nav class="help-nav-links">
+                                <a href="#help-getting-started" class="help-nav-link active">🚀 Primeros Pasos</a>
+                                <a href="#help-features" class="help-nav-link">📈 Funciones</a>
+                                <a href="#help-tips" class="help-nav-link">💡 Consejos</a>
+                                <a href="#help-additional" class="help-nav-link">🔧 Adicional</a>
+                                <a href="#help-faq" class="help-nav-link">❓ FAQ</a>
+                                <a href="#help-contact" class="help-nav-link">💬 Contacto</a>
+                            </nav>
+                            <div class="help-progress">
+                                <h4>Tu Progreso</h4>
+                                <div class="progress-steps">
+                                    <div class="progress-step" data-step="1">
+                                        <span class="progress-check">✓</span>
+                                        <span class="progress-text">Región configurada</span>
+                                    </div>
+                                    <div class="progress-step" data-step="2">
+                                        <span class="progress-check">✓</span>
+                                        <span class="progress-text">Dispositivos añadidos</span>
+                                    </div>
+                                    <div class="progress-step" data-step="3">
+                                        <span class="progress-check">○</span>
+                                        <span class="progress-text">Meta establecida</span>
+                                    </div>
+                                    <div class="progress-step" data-step="4">
+                                        <span class="progress-check">○</span>
+                                        <span class="progress-text">Simulación creada</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <div class="help-content">
+                            <div class="help-hero">
+                                <h2>❓ Centro de Ayuda</h2>
+                                <p>Aprende a usar <mark class="highlight-brand">JLabEco</mark> para reducir tu <mark class="highlight-eco">huella de carbono</mark> tecnológica</p>
+                            </div>
+
+                        <div class="help-section" id="help-getting-started">
+                            <h3>🚀 Primeros Pasos</h3>
+                            <div class="help-steps">
+                                <div class="help-step" data-step="1">
+                                    <div class="step-header">
+                                        <div class="step-number">1</div>
+                                        <div class="step-title">
+                                            <h4>Configura tu región</h4>
+                                            <span class="step-status" data-status="pending">Pendiente</span>
+                                        </div>
+                                    </div>
+                                    <div class="step-content">
+                                        <p>Haz clic en el botón de <mark class="highlight-key">región</mark> en la parte superior <span class="emoji-highlight">🌍</span> para seleccionar tu país. Esto permite calcular tu <mark class="highlight-key">huella de carbono</mark> con precisión según la <mark class="highlight-key">intensidad energética</mark> de tu región.</p>
+                                        <div class="help-tip tip-info">
+                                            💡 <strong>Tip:</strong> La app detecta tu país automáticamente, pero puedes cambiarlo manualmente.
+                                        </div>
+                                        <button class="btn-complete-step" data-step="1">✓ Marcar como completado</button>
+                                    </div>
+                                </div>
+
+                                <div class="help-step" data-step="2">
+                                    <div class="step-header">
+                                        <div class="step-number">2</div>
+                                        <div class="step-title">
+                                            <h4>Agrega tus dispositivos</h4>
+                                            <span class="step-status" data-status="pending">Pendiente</span>
+                                        </div>
+                                    </div>
+                                    <div class="step-content">
+                                        <p>Ve a la sección <mark class="highlight-key">Dispositivos</mark> <span class="emoji-highlight">💻</span> y añade todos tus equipos tecnológicos. Puedes elegir entre más de <mark class="highlight-number">100 tipos</mark> de dispositivos organizados por categorías.</p>
+                                        <div class="help-example">
+                                            <strong>📋 Datos necesarios:</strong>
+                                            <ul>
+                                                <li><mark class="highlight-key">Nombre</mark> del dispositivo (ej: "Laptop trabajo")</li>
+                                                <li><mark class="highlight-key">Tipo</mark> de dispositivo (ej: Laptop)</li>
+                                                <li><mark class="highlight-key">Consumo</mark> en watts (se autocompleta según el tipo)</li>
+                                                <li><mark class="highlight-key">Horas de uso</mark> diario (ej: 8 horas)</li>
+                                            </ul>
+                                        </div>
+                                        <button class="btn-complete-step" data-step="2">✓ Marcar como completado</button>
+                                    </div>
+                                </div>
+
+                                <div class="help-step" data-step="3">
+                                    <div class="step-header">
+                                        <div class="step-number">3</div>
+                                        <div class="step-title">
+                                            <h4>Monitorea tu huella</h4>
+                                            <span class="step-status" data-status="pending">Pendiente</span>
+                                        </div>
+                                    </div>
+                                    <div class="step-content">
+                                        <p>En la sección <mark class="highlight-key">Resumen</mark> <span class="emoji-highlight">📊</span> verás tu <mark class="highlight-key">huella de carbono total</mark> en <mark class="highlight-key">kg CO₂e</mark> (dióxido de carbono equivalente). La app calcula automáticamente tu impacto diario, semanal y mensual.</p>
+                                        <div class="help-tip tip-success">
+                                            ✅ <strong>Bueno saber:</strong> CO₂e incluye todos los gases de efecto invernadero, no solo CO₂.
+                                        </div>
+                                        <button class="btn-complete-step" data-step="3">✓ Marcar como completado</button>
+                                    </div>
+                                </div>
+
+                                <div class="help-step" data-step="4">
+                                    <div class="step-header">
+                                        <div class="step-number">4</div>
+                                        <div class="step-title">
+                                            <h4>Establece metas de reducción</h4>
+                                            <span class="step-status" data-status="pending">Pendiente</span>
+                                        </div>
+                                    </div>
+                                    <div class="step-content">
+                                        <p>En el panel de <mark class="highlight-key">Resumen</mark>, haz clic en <mark class="highlight-key">"Configurar Meta"</mark> para establecer un objetivo de reducción. La app te mostrará tu progreso y te ayudará a alcanzarlo.</p>
+                                        <button class="btn-complete-step" data-step="4">✓ Marcar como completado</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="help-section" id="help-features">
+                            <h3>📈 Funciones Principales</h3>
+                            <div class="help-features">
+                                <div class="help-feature">
+                                    <div class="feature-icon">📊</div>
+                                    <div class="feature-content">
+                                        <h4>Resumen (Dashboard)</h4>
+                                        <p>Vista general de tu huella de carbono con:</p>
+                                        <ul>
+                                            <li>Estadísticas diarias, semanales y mensuales</li>
+                                            <li>Comparativas con promedios y mejores prácticas</li>
+                                            <li>Progreso de tu meta de reducción</li>
+                                            <li>Indicador de intensidad de carbono de tu región</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="help-feature">
+                                    <div class="feature-icon">💻</div>
+                                    <div class="feature-content">
+                                        <h4>Dispositivos</h4>
+                                        <p>Gestiona todos tus equipos tecnológicos:</p>
+                                        <ul>
+                                            <li>Añade dispositivos de más de 100 tipos diferentes</li>
+                                            <li>Edita horas de uso y consumo</li>
+                                            <li>Elimina dispositivos que ya no uses</li>
+                                            <li>Ve el consumo individual de cada equipo</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="help-feature">
+                                    <div class="feature-icon">📈</div>
+                                    <div class="feature-content">
+                                        <h4>Gráficas</h4>
+                                        <p>Visualiza tu consumo con diferentes perspectivas:</p>
+                                        <ul>
+                                            <li><strong>Distribución:</strong> Qué dispositivos consumen más</li>
+                                            <li><strong>Historial:</strong> Evolución de tu huella en el tiempo</li>
+                                            <li><strong>Por categoría:</strong> Consumo por tipo de dispositivo</li>
+                                            <li><strong>Filtros:</strong> Personaliza las vistas por período y categoría</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="help-feature">
+                                    <div class="feature-icon">🎯</div>
+                                    <div class="feature-content">
+                                        <h4>Simulador</h4>
+                                        <p>Prueba diferentes escenarios de reducción:</p>
+                                        <ul>
+                                            <li>Simula reducción de horas de uso de dispositivos</li>
+                                            <li>Ve proyecciones a 6 meses de ahorro de CO₂e</li>
+                                            <li>Calcula el impacto económico y ambiental</li>
+                                            <li>Aplica simulaciones exitosas como metas reales</li>
+                                        </ul>
+                                        <div class="help-tip">💰 <strong>Extra:</strong> El simulador también calcula cuánto dinero ahorrarías en electricidad.</div>
+                                    </div>
+                                </div>
+
+                                <div class="help-feature">
+                                    <div class="feature-icon">🏆</div>
+                                    <div class="feature-content">
+                                        <h4>Logros</h4>
+                                        <p>Sistema de gamificación para mantenerte motivado:</p>
+                                        <ul>
+                                            <li>Desbloquea logros por tus acciones ecológicas</li>
+                                            <li>Acumula puntos ecológicos (Eco Points)</li>
+                                            <li>Sube de nivel: desde Eco Novato hasta Eco Gurú</li>
+                                            <li>Completa retos activos para ganar recompensas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="help-section" id="help-tips">
+                            <h3>💡 Consejos para Reducir tu Huella</h3>
+                            <div class="help-tips-grid">
+                                <div class="tip-card">
+                                    <div class="tip-icon">⏰</div>
+                                    <h4>Optimiza horarios</h4>
+                                    <p>Reduce las <mark class="highlight-key">horas de uso</mark> de dispositivos que no necesitas tener encendidos todo el día.</p>
+                                </div>
+                                <div class="tip-card">
+                                    <div class="tip-icon">🌙</div>
+                                    <h4>Modo de suspensión</h4>
+                                    <p>Configura el <mark class="highlight-key">modo de ahorro de energía</mark> en tus equipos cuando no los estés usando activamente.</p>
+                                </div>
+                                <div class="tip-card">
+                                    <div class="tip-icon">🔌</div>
+                                    <h4>Desconecta lo innecesario</h4>
+                                    <p>Los dispositivos en <mark class="highlight-key">standby</mark> siguen consumiendo energía. Desconéctalos cuando no los uses.</p>
+                                </div>
+                                <div class="tip-card">
+                                    <div class="tip-icon">♻️</div>
+                                    <h4>Actualiza con criterio</h4>
+                                    <p>No cambies de dispositivo si no es necesario. La <mark class="highlight-key">fabricación</mark> tiene un gran impacto ambiental.</p>
+                                </div>
+                                <div class="tip-card">
+                                    <div class="tip-icon">☀️</div>
+                                    <h4>Energía renovable</h4>
+                                    <p>Si puedes, contrata <mark class="highlight-key">electricidad de fuentes renovables</mark> para reducir tu intensidad de carbono.</p>
+                                </div>
+                                <div class="tip-card">
+                                    <div class="tip-icon">📱</div>
+                                    <h4>Carga inteligente</h4>
+                                    <p>No dejes cargadores enchufados sin usar y evita cargar dispositivos al <mark class="highlight-key">100%</mark> constantemente.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="help-section" id="help-additional">
+                            <h3>🔧 Funciones Adicionales</h3>
+                            <div class="help-features">
+                                <div class="help-feature">
+                                    <div class="feature-icon">📥</div>
+                                    <div class="feature-content">
+                                        <h4>Exportar datos</h4>
+                                        <p>Descarga tu información en diferentes formatos:</p>
+                                        <ul>
+                                            <li><strong>JSON:</strong> Para respaldo o transferencia de datos</li>
+                                            <li><strong>CSV:</strong> Para análisis en hojas de cálculo</li>
+                                            <li><strong>PDF:</strong> Para generar reportes imprimibles</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="help-feature">
+                                    <div class="feature-icon">📤</div>
+                                    <div class="feature-content">
+                                        <h4>Importar datos</h4>
+                                        <p>Restaura tus datos desde un archivo JSON previamente exportado. Útil para:</p>
+                                        <ul>
+                                            <li>Cambiar de dispositivo</li>
+                                            <li>Recuperar datos después de limpiar el navegador</li>
+                                            <li>Compartir configuración con otros usuarios</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="help-feature">
+                                    <div class="feature-icon">🔔</div>
+                                    <div class="feature-content">
+                                        <h4>Notificaciones</h4>
+                                        <p>Recibe alertas motivacionales y actualizaciones:</p>
+                                        <ul>
+                                            <li>Logros desbloqueados</li>
+                                            <li>Hitos de reducción alcanzados</li>
+                                            <li>Progreso hacia tus metas</li>
+                                            <li>Consejos personalizados</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="help-section" id="help-faq">
+                            <h3>❓ Preguntas Frecuentes</h3>
+                            <div class="faq-accordion">
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Qué significa CO₂e?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p><mark class="highlight-key">CO₂e</mark> (dióxido de carbono equivalente) es una medida que convierte todos los <mark class="highlight-key">gases de efecto invernadero</mark> a su equivalente en CO₂, facilitando la comparación del impacto ambiental.</p>
+                                    </div>
+                                </div>
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Por qué la región es importante?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p>Cada país tiene una <mark class="highlight-key">intensidad de carbono</mark> diferente según sus fuentes de energía. Por ejemplo, <mark class="highlight-key">Noruega</mark> usa principalmente hidroeléctrica (bajo impacto), mientras que <mark class="highlight-key">Polonia</mark> depende del carbón (alto impacto).</p>
+                                    </div>
+                                </div>
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Cómo se calcula mi huella de carbono?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p>Multiplicamos el consumo de cada dispositivo (<mark class="highlight-key">watts × horas diarias</mark>) por la intensidad de carbono de tu región.</p>
+                                        <div class="help-tip tip-info">
+                                            📐 <strong>Fórmula:</strong> (Consumo en kWh) × (Factor de emisión del país) = kg CO₂e
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Mis datos están seguros?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p>✅ Sí. Todos tus datos se almacenan <mark class="highlight-key">localmente en tu navegador</mark> (localStorage). No enviamos información a servidores externos excepto para detectar tu región (usando ipapi.co).</p>
+                                    </div>
+                                </div>
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Qué pasa si borro los datos del navegador?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p>⚠️ Perderás tu información. Por eso recomendamos <mark class="highlight-key">exportar tus datos</mark> regularmente usando el botón "Exportar" en la parte superior.</p>
+                                    </div>
+                                </div>
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Cómo consigo más puntos ecológicos?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p>Gana <mark class="highlight-key">puntos ecológicos</mark> completando acciones como:</p>
+                                        <ul>
+                                            <li>✓ Agregar dispositivos</li>
+                                            <li>✓ Reducir tu huella</li>
+                                            <li>✓ Alcanzar metas</li>
+                                            <li>✓ Usar el simulador</li>
+                                            <li>✓ Desbloquear logros</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="faq-item">
+                                    <button class="faq-question">
+                                        <span>¿Puedo usar JLabEco sin conexión?</span>
+                                        <span class="faq-toggle">▼</span>
+                                    </button>
+                                    <div class="faq-answer">
+                                        <p>✅ Casi completamente. Una vez cargada, la app funciona <mark class="highlight-key">offline</mark>. Solo necesitas conexión para la detección automática de región (puedes configurarla manualmente sin internet).</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="help-section" id="help-contact">
+                            <h3>💬 ¿Necesitas más ayuda?</h3>
+                            <div class="contact-section">
+                                <div class="contact-card">
+                                    <div class="contact-icon">📧</div>
+                                    <h4>Reporta un problema</h4>
+                                    <p>¿Encontraste un bug o tienes una sugerencia?</p>
+                                    <a href="https://github.com/deepdevjose/Calculadora-Ecologica/issues" target="_blank" class="btn-contact">Crear Issue en GitHub</a>
+                                </div>
+                                <div class="contact-card">
+                                    <div class="contact-icon">💡</div>
+                                    <h4>Comparte tu feedback</h4>
+                                    <p>Ayúdanos a mejorar con tus comentarios</p>
+                                    <button class="btn-contact" id="feedback-btn">Enviar Feedback</button>
+                                </div>
+                                <div class="contact-card">
+                                    <div class="contact-icon">⭐</div>
+                                    <h4>Apoya el proyecto</h4>
+                                    <p>Dale una estrella en GitHub</p>
+                                    <a href="https://github.com/deepdevjose/Calculadora-Ecologica" target="_blank" class="btn-contact">⭐ Star en GitHub</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="help-footer">
+                            <div class="footer-content">
+                                <div class="footer-logo">
+                                    <span class="logo-icon">🍃</span>
+                                    <span class="logo-text">JLabEco</span>
+                                </div>
+                                <p><strong>JLabEco</strong> es una herramienta de <mark class="highlight-key">código abierto</mark> para ayudarte a reducir tu huella de carbono tecnológica. 🌍💚</p>
+                                <div class="footer-links">
+                                    <a href="https://github.com/deepdevjose/Calculadora-Ecologica" target="_blank">GitHub</a>
+                                    <span>•</span>
+                                    <a href="https://github.com/deepdevjose/Calculadora-Ecologica/blob/main/LICENSE" target="_blank">Licencia</a>
+                                    <span>•</span>
+                                    <span>v1.0.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Tab -->
+                <div class="tab-content" id="tab-about">
+                    <div class="about-container">
+                        <div class="about-hero">
+                            <h2>ℹ️ Acerca de JLabEco</h2>
+                            <p>Metodología y Fórmulas de Cálculo de Huella de Carbono</p>
+                        </div>
+
+                        <div class="about-section">
+                            <h3>📐 Fórmulas de Cálculo</h3>
+                            <p class="section-intro">JLabEco utiliza metodologías científicas reconocidas para calcular tu huella de carbono tecnológica. A continuación se detallan las fórmulas utilizadas:</p>
+
+                            <div class="formula-card">
+                                <div class="formula-header">
+                                    <span class="formula-number">1</span>
+                                    <h4>Huella Operativa (por consumo eléctrico)</h4>
+                                </div>
+                                <p class="formula-description">Calcula las emisiones de CO₂e generadas por el uso energético de los dispositivos.</p>
+                                
+                                <div class="formula-box">
+                                    <div class="formula-title">Fórmula Principal:</div>
+                                    <div class="formula-content">
+                                        <code>Huella Operativa (kg CO₂e) = Consumo (kWh) × Factor de emisión (kg CO₂e/kWh)</code>
+                                    </div>
+                                </div>
+
+                                <div class="formula-breakdown">
+                                    <h5>Donde:</h5>
+                                    <ul>
+                                        <li>
+                                            <strong>Consumo (kWh)</strong> = Potencia (Watts) × Horas de uso mensual ÷ 1000
+                                        </li>
+                                        <li>
+                                            <strong>Factor de emisión</strong>: depende del país. Por ejemplo:
+                                            <ul>
+                                                <li>México: <span class="highlight-value">0.48</span> kg CO₂e/kWh</li>
+                                                <li>España: <span class="highlight-value">0.45</span> kg CO₂e/kWh</li>
+                                                <li>Francia: <span class="highlight-value">0.09</span> kg CO₂e/kWh (nuclear)</li>
+                                                <li>Suecia: <span class="highlight-value">0.01</span> kg CO₂e/kWh (hidroeléctrica)</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="formula-example">
+                                    <strong>📝 Ejemplo:</strong>
+                                    <p>Una laptop de 65W usada 8 horas diarias en México:</p>
+                                    <ul>
+                                        <li>Consumo mensual = 65W × (8h × 30 días) ÷ 1000 = <span class="highlight-value">15.6 kWh</span></li>
+                                        <li>Huella operativa = 15.6 kWh × 0.48 = <span class="highlight-value">7.49 kg CO₂e/mes</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="formula-card">
+                                <div class="formula-header">
+                                    <span class="formula-number">2</span>
+                                    <h4>Huella de Materiales (por fabricación de equipos)</h4>
+                                </div>
+                                <p class="formula-description">Estima las emisiones generadas durante la producción del dispositivo, repartidas mensualmente.</p>
+                                
+                                <div class="formula-box">
+                                    <div class="formula-title">Fórmula Principal:</div>
+                                    <div class="formula-content">
+                                        <code>Huella de Materiales (kg CO₂e/mes) = Huella total de fabricación (kg CO₂e) ÷ Vida útil en meses</code>
+                                    </div>
+                                </div>
+
+                                <div class="formula-breakdown">
+                                    <h5>Donde:</h5>
+                                    <ul>
+                                        <li><strong>Vida útil en meses</strong> = Años de vida útil × 12</li>
+                                        <li><strong>Huella total de fabricación</strong> varía según el tipo de equipo:
+                                            <ul>
+                                                <li>Laptop: <span class="highlight-value">~200</span> kg CO₂e</li>
+                                                <li>Smartphone: <span class="highlight-value">~80</span> kg CO₂e</li>
+                                                <li>Router: <span class="highlight-value">~45.5</span> kg CO₂e</li>
+                                                <li>Monitor: <span class="highlight-value">~150</span> kg CO₂e</li>
+                                                <li>Servidor: <span class="highlight-value">~1000</span> kg CO₂e</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="formula-example">
+                                    <strong>📝 Ejemplo:</strong>
+                                    <p>Una laptop con vida útil de 4 años:</p>
+                                    <ul>
+                                        <li>Vida útil = 4 años × 12 = <span class="highlight-value">48 meses</span></li>
+                                        <li>Huella materiales = 200 kg CO₂e ÷ 48 = <span class="highlight-value">4.17 kg CO₂e/mes</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="formula-card">
+                                <div class="formula-header">
+                                    <span class="formula-number">3</span>
+                                    <h4>Huella Total Mensual</h4>
+                                </div>
+                                <p class="formula-description">Suma de las dos huellas anteriores para obtener el impacto total.</p>
+                                
+                                <div class="formula-box">
+                                    <div class="formula-title">Fórmula Principal:</div>
+                                    <div class="formula-content">
+                                        <code>Huella Total (kg CO₂e/mes) = Huella Operativa + Huella de Materiales</code>
+                                    </div>
+                                </div>
+
+                                <div class="formula-example">
+                                    <strong>📝 Ejemplo completo:</strong>
+                                    <p>Laptop de 65W, 8h/día, vida útil 4 años, en México:</p>
+                                    <ul>
+                                        <li>Huella operativa = <span class="highlight-value">7.49</span> kg CO₂e/mes</li>
+                                        <li>Huella materiales = <span class="highlight-value">4.17</span> kg CO₂e/mes</li>
+                                        <li>Huella total = 7.49 + 4.17 = <span class="highlight-value">11.66 kg CO₂e/mes</span></li>
+                                        <li>Anual = 11.66 × 12 = <span class="highlight-value">139.92 kg CO₂e/año</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="formula-card">
+                                <div class="formula-header">
+                                    <span class="formula-number">4</span>
+                                    <h4>Equivalencias Ecológicas (informativas)</h4>
+                                </div>
+                                <p class="formula-description">Comparaciones que ayudan a entender el impacto en términos más tangibles.</p>
+                                
+                                <div class="equivalence-group">
+                                    <h5>a) Árboles necesarios para absorber CO₂</h5>
+                                    <div class="formula-box">
+                                        <div class="formula-content">
+                                            <code>N° de árboles = Huella Total Anual (kg CO₂e) ÷ Absorción promedio de un árbol por año (≈ 21 kg CO₂e)</code>
+                                        </div>
+                                    </div>
+                                    <div class="formula-example">
+                                        <strong>📝 Ejemplo:</strong>
+                                        <p>Huella anual de 139.92 kg CO₂e:</p>
+                                        <ul>
+                                            <li>Árboles = 139.92 ÷ 21 = <span class="highlight-value">~6.66 árboles</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="equivalence-group">
+                                    <h5>b) Comparación con vuelos</h5>
+                                    <div class="formula-box">
+                                        <div class="formula-content">
+                                            <code>% de vuelo Madrid-Barcelona = (Huella Total Mensual ÷ 130 kg CO₂e) × 100</code>
+                                        </div>
+                                    </div>
+                                    <div class="formula-breakdown">
+                                        <p><strong>Referencia:</strong> Un vuelo Madrid-Barcelona emite aproximadamente <span class="highlight-value">130 kg CO₂e</span> por pasajero.</p>
+                                    </div>
+                                    <div class="formula-example">
+                                        <strong>📝 Ejemplo:</strong>
+                                        <p>Huella mensual de 11.66 kg CO₂e:</p>
+                                        <ul>
+                                            <li>Equivalencia = (11.66 ÷ 130) × 100 = <span class="highlight-value">~8.97%</span> de un vuelo</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-section">
+                            <h3>🌍 Metodología</h3>
+                            <div class="methodology-grid">
+                                <div class="methodology-card">
+                                    <div class="methodology-icon">📊</div>
+                                    <h4>Fuentes de Datos</h4>
+                                    <ul>
+                                        <li>Factores de emisión por país: IEA (International Energy Agency)</li>
+                                        <li>Huella de fabricación: EPA, estudios ACV (Análisis de Ciclo de Vida)</li>
+                                        <li>Consumo de dispositivos: especificaciones técnicas de fabricantes</li>
+                                    </ul>
+                                </div>
+                                <div class="methodology-card">
+                                    <div class="methodology-icon">⚖️</div>
+                                    <h4>Estándar CO₂e</h4>
+                                    <ul>
+                                        <li>CO₂e (dióxido de carbono equivalente)</li>
+                                        <li>Incluye: CO₂, CH₄, N₂O y otros GEI</li>
+                                        <li>Estándar GHG Protocol</li>
+                                    </ul>
+                                </div>
+                                <div class="methodology-card">
+                                    <div class="methodology-icon">🔄</div>
+                                    <h4>Actualización de Datos</h4>
+                                    <ul>
+                                        <li>Factores de emisión actualizados anualmente</li>
+                                        <li>Detección automática de región por IP</li>
+                                        <li>Base de datos con 25 países</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-section">
+                            <h3>💡 Consideraciones Importantes</h3>
+                            <div class="considerations-list">
+                                <div class="consideration-item">
+                                    <span class="consideration-icon">⚠️</span>
+                                    <div class="consideration-content">
+                                        <h5>Estimaciones Conservadoras</h5>
+                                        <p>Los cálculos son aproximaciones basadas en valores promedio. El consumo real puede variar según el modelo específico, condiciones de uso y antigüedad del equipo.</p>
+                                    </div>
+                                </div>
+                                <div class="consideration-item">
+                                    <span class="consideration-icon">🌱</span>
+                                    <div class="consideration-content">
+                                        <h5>Vida Útil Variable</h5>
+                                        <p>La vida útil estimada es un promedio. Extender la vida útil de tus dispositivos reduce significativamente su huella de carbono amortizada.</p>
+                                    </div>
+                                </div>
+                                <div class="consideration-item">
+                                    <span class="consideration-icon">🔌</span>
+                                    <div class="consideration-content">
+                                        <h5>Consumo en Standby</h5>
+                                        <p>Los dispositivos en modo de espera también consumen energía (1-10W típicamente). JLabEco considera solo el uso activo.</p>
+                                    </div>
+                                </div>
+                                <div class="consideration-item">
+                                    <span class="consideration-icon">♻️</span>
+                                    <div class="consideration-content">
+                                        <h5>Reciclaje y Disposición</h5>
+                                        <p>La huella de fin de vida (reciclaje/disposición) no está incluida en estos cálculos, pero representa ~5-10% adicional de la huella total.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-footer">
+                            <div class="footer-content">
+                                <div class="footer-logo">
+                                    <span class="logo-icon">🍃</span>
+                                    <span class="logo-text">JLabEco</span>
+                                </div>
+                                <p><strong>JLabEco v1.0.0</strong> - Calculadora de Huella de Carbono Tecnológica</p>
+                                <p>Desarrollado con 💚 para ayudar a reducir el impacto ambiental de la tecnología</p>
+                                <div class="footer-links">
+                                    <a href="https://github.com/deepdevjose/Calculadora-Ecologica" target="_blank">GitHub</a>
+                                    <span>•</span>
+                                    <a href="https://github.com/deepdevjose/Calculadora-Ecologica/blob/main/LICENSE" target="_blank">MIT License</a>
+                                    <span>•</span>
+                                    <a href="https://github.com/deepdevjose" target="_blank">@deepdevjose</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
         </main>
     </div>
+
+    <!-- Goal Modal -->
+    <div class="modal" id="goal-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎯 Configurar Meta de Reducción</h3>
+                <button class="modal-close" id="goal-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="goal-value">Meta de huella mensual (kg CO₂e):</label>
+                    <input type="number" id="goal-value" placeholder="Ej: 50" min="1">
+                    <span class="input-hint">Tu huella actual: <span id="current-footprint-hint">0</span> kg CO₂e</span>
+                </div>
+                <div class="form-group">
+                    <label for="goal-deadline">Fecha límite (opcional):</label>
+                    <input type="date" id="goal-deadline">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="goal-cancel">Cancelar</button>
+                <button class="btn-primary" id="goal-save">Guardar Meta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Region Modal -->
+    <div class="modal" id="region-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🌍 Configurar Región / País</h3>
+                <button class="modal-close" id="region-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="region-info-banner">
+                    <p><strong>¿Por qué es importante?</strong></p>
+                    <p>La intensidad de carbono varía según el país debido a diferentes fuentes de energía (renovables, nuclear, carbón, etc.). Esto afecta el cálculo de tu huella de carbono.</p>
+                </div>
+                <div class="form-group">
+                    <label for="region-select">Selecciona tu país:</label>
+                    <select id="region-select">
+                        <optgroup label="Europa">
+                            <option value="ES" data-intensity="0.45">🇪🇸 España (0.45 kg CO₂/kWh)</option>
+                            <option value="FR" data-intensity="0.09">🇫🇷 Francia (0.09 kg CO₂/kWh) - Nuclear</option>
+                            <option value="DE" data-intensity="0.38">🇩🇪 Alemania (0.38 kg CO₂/kWh)</option>
+                            <option value="GB" data-intensity="0.28">🇬🇧 Reino Unido (0.28 kg CO₂/kWh)</option>
+                            <option value="IT" data-intensity="0.42">🇮🇹 Italia (0.42 kg CO₂/kWh)</option>
+                            <option value="PT" data-intensity="0.35">🇵🇹 Portugal (0.35 kg CO₂/kWh)</option>
+                            <option value="SE" data-intensity="0.01">🇸🇪 Suecia (0.01 kg CO₂/kWh) - Hidroeléctrica</option>
+                            <option value="NO" data-intensity="0.02">🇳🇴 Noruega (0.02 kg CO₂/kWh) - Hidroeléctrica</option>
+                            <option value="DK" data-intensity="0.15">🇩🇰 Dinamarca (0.15 kg CO₂/kWh) - Eólica</option>
+                            <option value="PL" data-intensity="0.78">🇵🇱 Polonia (0.78 kg CO₂/kWh) - Carbón</option>
+                        </optgroup>
+                        <optgroup label="América">
+                            <option value="US" data-intensity="0.42">🇺🇸 Estados Unidos (0.42 kg CO₂/kWh)</option>
+                            <option value="MX" data-intensity="0.48">🇲🇽 México (0.48 kg CO₂/kWh)</option>
+                            <option value="BR" data-intensity="0.12">🇧🇷 Brasil (0.12 kg CO₂/kWh) - Hidroeléctrica</option>
+                            <option value="AR" data-intensity="0.39">🇦🇷 Argentina (0.39 kg CO₂/kWh)</option>
+                            <option value="CL" data-intensity="0.42">🇨🇱 Chile (0.42 kg CO₂/kWh)</option>
+                            <option value="CO" data-intensity="0.22">🇨🇴 Colombia (0.22 kg CO₂/kWh) - Hidroeléctrica</option>
+                        </optgroup>
+                        <optgroup label="Asia y Oceanía">
+                            <option value="CN" data-intensity="0.64">🇨🇳 China (0.64 kg CO₂/kWh) - Carbón</option>
+                            <option value="IN" data-intensity="0.71">🇮🇳 India (0.71 kg CO₂/kWh) - Carbón</option>
+                            <option value="JP" data-intensity="0.50">🇯🇵 Japón (0.50 kg CO₂/kWh)</option>
+                            <option value="KR" data-intensity="0.47">🇰🇷 Corea del Sur (0.47 kg CO₂/kWh)</option>
+                            <option value="AU" data-intensity="0.73">🇦🇺 Australia (0.73 kg CO₂/kWh) - Carbón</option>
+                            <option value="NZ" data-intensity="0.15">🇳🇿 Nueva Zelanda (0.15 kg CO₂/kWh) - Renovables</option>
+                        </optgroup>
+                        <optgroup label="África">
+                            <option value="ZA" data-intensity="0.95">🇿🇦 Sudáfrica (0.95 kg CO₂/kWh) - Carbón</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="region-comparison" id="region-comparison">
+                    <h4>📊 Comparación de Intensidad de Carbono</h4>
+                    <div class="intensity-scale">
+                        <div class="scale-bar">
+                            <span class="scale-marker" id="scale-marker" style="left: 47%"></span>
+                        </div>
+                        <div class="scale-labels">
+                            <span>🟢 Bajo (0.0)</span>
+                            <span>🟡 Medio (0.5)</span>
+                            <span>🔴 Alto (1.0)</span>
+                        </div>
+                    </div>
+                    <p class="intensity-info" id="intensity-info">
+                        Tu región actual tiene una intensidad <strong>media</strong> de carbono.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="region-cancel">Cancelar</button>
+                <button class="btn-primary" id="region-save">Guardar Región</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Motivational Notifications -->
+    <div class="notification-center" id="notification-center">
+        <div class="notification-header">
+            <span>🔔 Notificaciones</span>
+            <button class="notification-close" id="notification-close">✕</button>
+        </div>
+        <div class="notification-list" id="notification-list">
+            <!-- Notifications generated by JS -->
+        </div>
+    </div>
+    <button class="notification-trigger" id="notification-trigger">
+        🔔
+        <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+    </button>
+
     <script src="script.js"></script>
 </body>
 
