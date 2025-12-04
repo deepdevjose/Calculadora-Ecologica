@@ -247,6 +247,9 @@ function setupEventListeners() {
     elements.menuToggle?.addEventListener('click', toggleSidebar);
     elements.sidebarToggle?.addEventListener('click', toggleSidebar);
     
+    // Reset button
+    document.getElementById('reset-btn')?.addEventListener('click', handleReset);
+    
     // Device type change - update material hint
     elements.deviceType?.addEventListener('change', updateMaterialHint);
     elements.deviceWatts?.addEventListener('input', updateWattsHint);
@@ -1006,6 +1009,86 @@ function toggleSidebar() {
 function toggleExportMenu(e) {
     e.stopPropagation();
     elements.exportMenu?.classList.toggle('show');
+}
+
+// ==================== RESET FUNCTIONALITY ====================
+function handleReset() {
+    // Confirmación con el usuario
+    const confirmation = confirm(
+        '⚠️ ADVERTENCIA: Esta acción eliminará todos los datos\n\n' +
+        '• Todos los dispositivos\n' +
+        '• Historial de métricas\n' +
+        '• Logros y puntos ecológicos\n' +
+        '• Metas configuradas\n' +
+        '• Progreso de ayuda\n\n' +
+        '¿Estás seguro de que deseas restablecer todo?'
+    );
+    
+    if (!confirmation) return;
+    
+    // Segunda confirmación
+    const finalConfirmation = confirm(
+        '⚠️ ÚLTIMA CONFIRMACIÓN\n\n' +
+        'Esta acción NO se puede deshacer.\n' +
+        '¿Proceder con el restablecimiento?'
+    );
+    
+    if (!finalConfirmation) return;
+    
+    // Limpiar todos los datos de localStorage
+    const keysToRemove = [
+        STORAGE_KEY,
+        HISTORY_KEY,
+        GOALS_KEY,
+        ACHIEVEMENTS_KEY,
+        ECO_POINTS_KEY,
+        'help_step_1',
+        'help_step_2',
+        'help_step_3',
+        'help_step_4',
+        'jlabeco_visited',
+        'jlabeco_notifications'
+    ];
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // NO eliminamos REGION_KEY para mantener la configuración de región
+    
+    // Resetear variables globales
+    devices = [];
+    ecoPoints = 0;
+    userGoal = null;
+    achievements = initAchievements();
+    
+    // Destruir gráficas existentes
+    Object.values(charts).forEach(chart => {
+        if (chart) chart.destroy();
+    });
+    charts = {};
+    
+    // Reinicializar la aplicación
+    renderDevices();
+    calculateStats();
+    updateGoalDisplay();
+    updateAchievementsDisplay();
+    updateSimulator();
+    updateEcoPointsDisplay();
+    updateNotificationUI();
+    
+    // Reinicializar progreso de ayuda
+    if (typeof updateHelpProgress === 'function') {
+        updateHelpProgress();
+    }
+    
+    // Mostrar notificación de éxito
+    addNotification('info', '✅ Restablecimiento Completo', 
+        'Todas las métricas han sido restablecidas. ¡Empieza de nuevo!');
+    
+    // Mostrar toast de confirmación
+    showToast('🔄 Datos restablecidos correctamente', 'success');
+    
+    // Log para debugging
+    console.log('✅ Sistema restablecido correctamente');
 }
 
 function exportData(format) {

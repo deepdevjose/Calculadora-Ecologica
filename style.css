@@ -452,6 +452,20 @@ body {
     color: var(--primary);
 }
 
+.btn-action.btn-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.btn-action.btn-danger:hover {
+    background-color: #ef4444;
+    border-color: #dc2626;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
 .btn-primary {
     background-color: var(--primary);
     color: white;
